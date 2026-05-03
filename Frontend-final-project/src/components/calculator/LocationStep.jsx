@@ -1,6 +1,32 @@
+import { useState, useEffect } from "react";
 import { MapPin } from "lucide-react";
 
 export default function LocationStep({ state, setState, onNext, rates }) {
+
+
+    const [dbRates, setDbRates] = useState({
+        ny: { name: "New York", kwhCost: 0.23 },
+        ma: { name: "Massachusetts", kwhCost: 0.28 },
+        ct: { name: "Connecticut", kwhCost: 0.29 }
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('http://localhost:5000/api/energy/rates')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                setDbRates(data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error("Error fetching rates:", error);
+                setLoading(false);
+            });
+    }, []);
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-center">
@@ -18,17 +44,21 @@ export default function LocationStep({ state, setState, onNext, rates }) {
                 value={state}
                 onChange={(e) => setState(e.target.value)}
             >
-                <option value="" className="dark:text-slate-400">Where are you located?</option>
-                {Object.keys(rates).map(id => (
-                    <option key={id} value={id} className="dark:bg-slate-800 dark:text-white">
-                        {rates[id].name}
-                    </option>
-                ))}
+                <option value="" className="dark:text-slate-400">{loading ? "Loading states..." : "Choose your state"}</option>
+                {Array.isArray(dbRates) ? (
+                    dbRates.map((rate) => (
+                        <option key={rate.state_code} value={rate.state_code} className="dark:bg-slate-800 dark:text-white">{rate.name}</option>
+                    ))
+                ) : (
+                    Object.keys(dbRates).map(id => (
+                        <option key={id} value={id} className="dark:bg-slate-800 dark:text-white">{dbRates[id].name}</option>
+                    ))
+                )}
             </select>
             <button
                 type="button"
                 onClick={onNext}
-                disabled={!state}
+                disabled={!state || loading}
                 className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:bg-emerald-700 transition-colors"
             >
                 Next

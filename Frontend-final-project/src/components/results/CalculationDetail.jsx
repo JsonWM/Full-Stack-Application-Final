@@ -1,16 +1,42 @@
+import { useState, useEffect } from "react"; // Added hooks
 import { useParams, Link } from "react-router-dom";
 import DetailHeader from "./DetailHeader";
 import SavingsChart from "./SavingsChart";
 import DetailTips from "./DetailTips";
-import { Leaf, Wallet, Heart } from "lucide-react";
+import { Leaf, Wallet, Heart, Loader2 } from "lucide-react";
 
 export default function CalculationDetail() {
   const { id } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const saved = JSON.parse(localStorage.getItem("energy_history") || "[]");
-  const data = saved.find((item) => item.id.toString() === id);
+  // Fetch the specific record from the Backend
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/energy/history`)
+      .then(res => res.json())
+      .then(history => {
+        // Find the specific record by ID in the list
+        const record = history.find(item => item.id.toString() === id);
+        setData(record);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error fetching detail:", err);
+        setLoading(false);
+      });
+  }, [id]);
 
-  // 1. Validation check
+  // Show a loader while the API responds
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+        <Loader2 className="animate-spin mb-2" size={40} />
+        <p>Loading report...</p>
+      </div>
+    );
+  }
+
+  // If after loading there is no data, then show error
   if (!data) {
     return (
       <div className="text-center py-20 dark:text-white">
@@ -26,9 +52,7 @@ export default function CalculationDetail() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 animate-in fade-in duration-500">
-      {/* Passing the updated props to DetailHeader */}
-      <DetailHeader stateName={data.stateName} date={data.date} id={id} />
-
+      <DetailHeader stateName={data.state_name} date={data.created_at} id={id} />
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -60,8 +84,8 @@ export default function CalculationDetail() {
         <div className="md:col-span-1">
           <SavingsChart
             savings={data.savings}
-            currentSpending={data.currentSpending}
-            stateName={data.stateName}
+            currentSpending={data.spending}
+            stateName={data.state_name}
             bulbs={data.bulbs || 0}
             plugs={data.plugs || 0}
             tvs={data.tvs || 0}

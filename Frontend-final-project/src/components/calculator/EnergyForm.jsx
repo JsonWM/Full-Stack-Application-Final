@@ -8,9 +8,6 @@ import ConsumptionStep from "./ConsumptionStep";
 import SuccessStep from "./SuccessStep";
 import HistoryItem from "./HistoryItem";
 
-// Logic imports
-import { STATE_RATES, calculateEnergyResults } from "../../utils/energyLogic";
-
 export default function EnergyForm() {
   const [lastId, setLastId] = useState(null);
   const [step, setStep] = useState(1);
@@ -32,36 +29,54 @@ export default function EnergyForm() {
   });
 
   useEffect(() => {
-    localStorage.setItem("energy_history", JSON.stringify(history));
-  }, [history]);
+    fetch('http://localhost:5000/api/energy/history')
+      .then(res => res.json())
+      .then(data => setHistory(data))
+      .catch(err => console.error("Error loading history:", err));
+  }, []);
 
   // Submission Handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      const { spending, savings } = calculateEnergyResults(formData);
-      const uniqueId = Date.now();
+    try {
+      // Sending data to the Backend API
+      const response = await fetch('http://localhost:5000/api/energy/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      const newCalculation = {
-        id: uniqueId,
-        stateName: STATE_RATES[formData.state]?.name || "Unknown",
-        bulbs: formData.bulbs,
-        plugs: formData.plugs,
-        tvs: formData.tvs,
-        ac: formData.ac,
-        usageHours: formData.usageHours,
-        currentSpending: spending,
-        savings: savings,
-        date: new Date().toLocaleDateString('en-US')
-      };
+      if (!response.ok) throw new Error('Error in calculation');
 
-      setHistory([newCalculation, ...history]);
-      setLastId(uniqueId);
-      setLoading(false);
+      const data = await response.json();
+      const newRecord = Array.isArray(data) ? data[0] : data;
+
+      setLastId(newRecord.id);
+      setHistory([newRecord, ...history]);
       setStep(3);
-    }, 1500);
+
+    } catch (error) {
+      console.error("Fetch error:", error);
+      alert("Could not connect to the server. Check backend.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/energy/history/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) setHistory(history.filter(item => item.id !== id))
+    } catch (error) {
+      alert("Could not delete the record. Is the server running?");
+    }
   };
 
   return (
@@ -75,7 +90,6 @@ export default function EnergyForm() {
               state={formData.state}
               setState={(v) => setFormData({ ...formData, state: v })}
               onNext={() => setStep(2)}
-              rates={STATE_RATES}
             />
           )}
 
@@ -91,7 +105,7 @@ export default function EnergyForm() {
 
           {step === 3 && (
             <SuccessStep
-              results={calculateEnergyResults(formData)}
+              results={history[0]}
               formData={formData}
               lastId={lastId}
               onReset={() => setStep(1)}
@@ -110,7 +124,7 @@ export default function EnergyForm() {
               <HistoryItem
                 key={item.id}
                 item={item}
-                onDelete={(id) => setHistory(history.filter(i => i.id !== id))}
+                onDelete={(id) => handleDelete(id)}
               />
             ))}
           </div>
