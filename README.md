@@ -22,7 +22,7 @@ Tech Stack:
 REST API for the MyEcoBill application
 
 Tech Stack:
-- Server:   
+- Server:  Node.js with Express.js 
 - Database: PostgreSQL
 
 Endpoints:
