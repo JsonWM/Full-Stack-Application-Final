@@ -49,6 +49,8 @@ Savings Calculations (CRUD):
 
 Note: This project was a lot of fun and very rewarding to build. Although I already had some experience with backend and frontend frameworks such as Django, Spring Boot, Angular, and currently React, using AI as a tool allowed me to build the application much more quickly. Most importantly, I learned how to deploy my first full-stack application. 
 
+- Note if first time opening the application: If it is first time opening the app, the database will take a few seconds to load the data, since this is the free version of Render.
+
 # Installation
 
 - Clone repository
