@@ -12,7 +12,7 @@ export default function LocationStep({ state, setState, onNext, rates }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/energy/rates')
+        fetch(`${import.meta.env.VITE_API_URL}/api/energy/rates`)
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();

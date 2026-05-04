@@ -29,7 +29,7 @@ export default function EnergyForm() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/energy/history')
+    fetch(`${import.meta.env.VITE_API_URL}/api/energy/history`)
       .then(res => res.json())
       .then(data => setHistory(data))
       .catch(err => console.error("Error loading history:", err));
@@ -42,7 +42,7 @@ export default function EnergyForm() {
 
     try {
       // Sending data to the Backend API
-      const response = await fetch('http://localhost:5000/api/energy/calculate', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/energy/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export default function EnergyForm() {
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/energy/history/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/energy/history/${id}`, {
         method: 'DELETE',
       });
 

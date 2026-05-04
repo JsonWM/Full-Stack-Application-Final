@@ -12,7 +12,7 @@ export default function CalculationDetail() {
 
   // Fetch the specific record from the Backend
   useEffect(() => {
-    fetch(`http://localhost:5000/api/energy/history`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/energy/history`)
       .then(res => res.json())
       .then(history => {
         // Find the specific record by ID in the list
